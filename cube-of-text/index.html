@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Demo</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+
+
+    <!--
+        Vertex shader
+    -->
+
+    <script type="x-shader/x-vertex" data-program="main">
+
+        attribute vec2 a_position;
+        attribute vec2 a_texture;
+        uniform float u_scene_scale;
+        uniform vec2 u_scene_ratio;
+        uniform float u_texture_scale;
+        uniform vec2 u_texture_ratio;
+        uniform vec3 u_origin;
+        uniform vec3 u_point;
+        uniform float u_rotateX;
+        uniform float u_rotateY;
+        uniform float u_perspective;
+        uniform float u_offsetX;
+        uniform float u_offsetY;
+        varying vec2 v_texture;
+
+        vec3 rotateX (vec3 point) {
+            float x = point.x;
+            float y = (point.y - u_origin.y) * cos(u_rotateX) - (point.z - u_origin.z) * sin(u_rotateX) + u_origin.y;
+            float z = (point.y - u_origin.y) * sin(u_rotateX) + (point.z - u_origin.z) * cos(u_rotateX) + u_origin.z;
+            return vec3(x, y, z);
+        }
+
+        vec3 rotateY (vec3 point) {
+            float x = (point.x - u_origin.x) * cos(u_rotateY) + (point.z - u_origin.z) * sin(u_rotateY) + u_origin.x;
+            float y = point.y;
+            float z = (u_origin.x - point.x) * sin(u_rotateY) + (point.z - u_origin.z) * cos(u_rotateY) + u_origin.z;
+            return vec3(x, y, z);
+        }
+
+        void main() {
+            vec2 coord = a_position * u_texture_ratio * u_texture_scale;
+            vec3 point = rotateY(rotateX(u_point));
+            float s = u_perspective / (u_perspective - point.z);
+            float x = (point.x + coord.x) / s;
+            float y = (point.y + coord.y) / s;
+            vec2 position = vec2(x, y) * u_scene_ratio * u_scene_scale;
+            gl_Position = vec4(position, point.z, 1);
+            v_texture = vec2(a_texture.x + u_offsetX, a_texture.y + u_offsetY);
+        }
+
+    </script>
+
+
+
+    <!--
+        Fragment shader
+    -->
+
+    <script type="x-shader/x-fragment" data-program="main">
+
+        precision mediump float;
+        uniform sampler2D u_image;
+        varying vec2 v_texture;
+
+        void main() {
+            gl_FragColor = texture2D(u_image, v_texture);
+        }
+
+    </script>
+
+
+
+    <!--
+        Scripts
+    -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.9/dat.gui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <script src="index.js"></script>
+
+
+
+</body>
+</html>
