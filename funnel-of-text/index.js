@@ -21,6 +21,7 @@
             const image = new Image();
             image.src = src;
             image.onload = () => resolve(image);
+            image.crossOrigin = 'anonymous';
         })
     }
 
@@ -146,7 +147,7 @@
     // Setup
     // ---------------------
 
-    const image = await load('./text.png');
+    const image = await load('https://dmtkpv.github.io/pens/funnel-of-text/text.png');
     const vertices = createFunnel(image.width / image.height);
     defineAttribute('a_position', new Float32Array(vertices.position), 3);
     defineAttribute('a_texture', new Float32Array(vertices.texture));
@@ -162,6 +163,7 @@
     (() => {
 
         const max = Math.PI / 2;
+        const area = 256;
         const uniform = getUniform('u_bend');
 
         const state = {
@@ -177,9 +179,16 @@
             }
         }
 
+        function scale (current, total) {
+            let val = current - total / 2;
+            val /= Math.min(area, total / 2);
+            val = Math.min(Math.max(val, -1), 1);
+            return val * max;
+        }
+
         window.addEventListener('mousemove', event => {
-            const x = (event.clientY / window.innerHeight * 2 - 1) * max;
-            const y = (event.clientX / window.innerWidth * 2 - 1) * max;
+            const x = scale(event.clientY, window.innerHeight);
+            const y = scale(event.clientX, window.innerWidth);
             gsap.killTweensOf(state);
             gsap.to(state, { ...options, x, y });
         });
