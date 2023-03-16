@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Demo</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+
+
+    <!--
+        Vertex shader
+    -->
+
+    <script type="x-shader/x-vertex">
+
+        attribute vec3 a_position;
+        attribute vec2 a_texture;
+        uniform vec2 u_bend;
+        varying vec2 v_texture;
+        varying float v_depth;
+
+        vec3 rotateX (vec3 point, float angle) {
+            float x = point.x;
+            float y = point.y * cos(angle) - point.z * sin(angle);
+            float z = point.y * sin(angle) + point.z * cos(angle);
+            return vec3(x, y, z);
+        }
+
+        vec3 rotateY (vec3 point, float angle) {
+            float x = point.x * cos(angle) + point.z * sin(angle);
+            float y = point.y;
+            float z = point.x * sin(angle) + point.z * cos(angle);
+            return vec3(x, y, z);
+        }
+
+        void main() {
+            vec3 point = a_position;
+            vec2 angle = u_bend * point.z;
+            point = rotateX(point, angle.x);
+            point = rotateY(point, angle.y);
+            float perspective = 2.0;
+            float s = perspective / (perspective - point.z);
+            float x = point.x / s;
+            float y = point.y / s;
+            gl_Position = vec4(x, y, point.z, 1);
+            v_depth = a_position.z;
+            v_texture = a_texture;
+        }
+
+    </script>
+
+
+
+    <!--
+        Fragment shader
+    -->
+
+    <script type="x-shader/x-fragment">
+
+        precision mediump float;
+        uniform sampler2D u_image;
+        varying float v_depth;
+        varying vec2 v_texture;
+
+        void main() {
+            float amount = v_depth / 0.9;
+            vec4 fog = vec4(0, 0, 0, 1);
+            vec4 color = texture2D(u_image, v_texture);
+            gl_FragColor = mix(color, fog, amount);
+        }
+
+    </script>
+
+
+
+    <!--
+        Scripts
+    -->
+
+    <canvas width="512" height="512"></canvas>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <script src="index.js"></script>
+
+
+
+</body>
+</html>
