@@ -153,8 +153,7 @@
 
         const image = await load('./frame.png');
         const texture = defineTexture(image);
-        const coords = getTextureUv(32);
-        const uv = Array(positions.length / 6).fill(coords).flat();
+        const uv = Array(4).fill(getTextureUv(32)).flat();
 
         function render (first = 0) {
             gl.bindTexture(gl.TEXTURE_2D, texture)
@@ -177,15 +176,16 @@
 
     async function createDepth () {
 
-        const positions = Array(2).fill().map((_, i, { length }) => {
+        const length = 20;
+
+        const positions = Array(length).fill().map((_, i, { length }) => {
             const z = -1 + i / (length - 1) * 2;
             return createPlane(2, 2).translateZ(z).positions;
         }).flat();
 
         const image = await load('./image.png');
         const texture = defineTexture(image);
-        const coords = getTextureUv();
-        const uv = Array(positions.length / 6).fill(coords).flat();
+        const uv = Array(length).fill(getTextureUv()).flat();
 
         function render (first = 0) {
             gl.bindTexture(gl.TEXTURE_2D, texture)
@@ -221,7 +221,7 @@
 
     function render () {
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        // frame.render();
+        frame.render();
         depth.render(frame.positions.length / 3);
         requestAnimationFrame(render);
     }
