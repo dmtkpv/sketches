@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+
+
+    <!--
+        Vertex shader
+    -->
+
+    <script type="x-shader/x-vertex">
+
+        attribute vec3 a_pos;
+        attribute vec2 a_tex;
+        varying vec2 v_tex;
+        uniform vec2 u_rotation;
+
+        vec3 origin = vec3(0.5, 0.5, 0.5);
+
+        vec3 rotateY (vec3 point, float angle) {
+            float x = (point.x - origin.x) * cos(angle) - (point.z - origin.z) * sin(angle) + origin.x;
+            float y = point.y;
+            float z = (point.x - origin.x) * sin(angle) + (point.z - origin.z) * cos(angle) + origin.z;
+            return vec3(x, y, z);
+        }
+
+        vec3 rotateX (vec3 point, float angle) {
+            float x = point.x;
+            float y = (point.y - origin.y) * cos(angle) - (point.z - origin.z) * sin(angle) + origin.y;
+            float z = (point.y - origin.y) * sin(angle) + (point.z - origin.z) * cos(angle) + origin.z;
+            return vec3(x, y, z);
+        }
+
+        vec4 project (vec3 point ) {
+            return vec4(point.xyz, 2.0 + point.z);
+        }
+
+        void main() {
+            vec3 point = a_pos;
+            point = rotateY(point, u_rotation.y);
+            point = rotateX(point, u_rotation.x);
+            gl_Position = project(point);
+            v_tex = a_tex;
+        }
+
+    </script>
+
+
+
+    <!--
+        Fragment shader
+    -->
+
+    <script type="x-shader/x-fragment">
+
+        precision mediump float;
+        uniform sampler2D u_image;
+        varying vec2 v_tex;
+
+        void main() {
+            vec4 color = texture2D(u_image, v_tex);
+            gl_FragColor = color;
+//            gl_FragColor = vec4(1,0,0,1);
+        }
+
+    </script>
+
+
+
+    <!--
+        Canvas
+    -->
+
+    <canvas width="512" height="512"></canvas>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <script src="index.js"></script>
+</body>
+</html>
