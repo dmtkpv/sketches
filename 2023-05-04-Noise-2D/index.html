@@ -1,0 +1,142 @@
+<!--
+    Styles
+-->
+
+<style>
+
+    body {
+        margin: 0;
+    }
+    canvas {
+        display: block;
+        background: #EEEEEE;
+    }
+
+</style>
+
+
+
+<!--
+    Vertex shader
+-->
+
+<script id="vert" type="x-shader/x-vertex">
+
+    attribute vec2 a_pos;
+
+    float random (vec2 point) {
+        return fract(sin(dot(point, vec2(12.9898,78.233))) * 43758.5453123);
+    }
+
+    float noise (vec2 point) {
+        vec2 i = floor(point);
+        vec2 f = fract(point);
+        float a = random(i);
+        float b = random(i + vec2(1.0, 0.0));
+        float c = random(i + vec2(0.0, 1.0));
+        float d = random(i + vec2(1.0, 1.0));
+        vec2 u = f*f*(3.0-2.0*f);
+        return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+    }
+
+    vec4 perspective (vec3 point) {
+        return vec4(point.xy * 2.0, point.z, 2.0 + point.z);
+    }
+
+    void main() {
+        float z = noise(a_pos * 10.) / 4.;
+        vec3 point = vec3(a_pos, z);
+        gl_Position = perspective(point);
+    }
+
+</script>
+
+
+
+<!--
+    Fragment shader
+-->
+
+<script id="frag" type="x-shader/x-fragment">
+
+    precision mediump float;
+
+    void main() {
+        gl_FragColor = vec4(0,0,0,1);
+    }
+
+</script>
+
+
+
+<!--
+    Scripts
+-->
+
+<script type="module">
+
+    import { Program } from 'https://esm.run/@dmtkpv/wgl@0.0.1'
+    import { Line2D } from 'https://esm.run/@dmtkpv/wgl@0.0.1/geometries'
+    import { GUI } from 'https://esm.run/dat.gui@0.7.9'
+
+
+
+    // -------------------
+    // Globals
+    // -------------------
+
+    const SIZE = 1024;
+    const canvas = document.createElement('canvas');
+    const vert = document.getElementById('vert').textContent;
+    const frag = document.getElementById('frag').textContent;
+    const gl = canvas.getContext('webgl');
+    const app = new Program(gl, vert, frag);
+
+
+
+
+    // -------------------
+    // Position
+    // -------------------
+
+    const pos = (() => {
+
+        const NUMBER = 100;
+        const LENGTH = SIZE;
+        const LIMIT = 1.01;
+        const lines = [];
+        let direction = -1;
+
+        function line (...args) {
+            lines.push(Line2D(...args, LENGTH));
+        }
+
+        for (let iy = 0; iy < NUMBER; iy++) {
+            const y = 1 - iy / (NUMBER - 1) * 2 || 0;
+            line(LIMIT * direction, y, LIMIT * direction * -1, y);
+            direction *= -1;
+        }
+
+        return lines.flat()
+
+    })();
+
+
+
+
+
+    // -------------------
+    // Run
+    // -------------------
+
+    canvas.width = SIZE;
+    canvas.height = SIZE;
+    document.body.append(canvas);
+
+    gl.viewport(0, 0, SIZE, SIZE);
+    app.attr('pos', pos, 2);
+    app.draw(gl.LINE_STRIP);
+
+
+
+</script>
