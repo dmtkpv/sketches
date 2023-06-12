@@ -1,0 +1,119 @@
+<!--
+    Styles
+-->
+
+<style>
+
+    body {
+        margin: 0;
+    }
+    canvas {
+        display: block;
+        background: #EEEEEE;
+    }
+
+</style>
+
+
+
+<!--
+    Vertex shader
+-->
+
+<script id="vert" type="x-shader/x-vertex">
+
+    attribute vec2 a_pos;
+    uniform float u_time;
+
+    float ScaleX = 2.0;
+    float ScaleY = 0.6;
+    float SpeedX = 1.0;
+    float SpeedY = 2.0;
+
+    float rand (float x) {
+        return fract(sin(x) * 1e4);
+    }
+
+    float noise (float x) {
+        float i = floor(x);
+        float f = fract(x);
+        return mix(rand(i), rand(i + 1.0), smoothstep(0.,1.,f));
+    }
+
+    void main() {
+        float x = a_pos.x * ScaleX + u_time * SpeedX;
+        float h = sin(u_time * SpeedY + x) * ScaleY;
+        float y = h / -2. + noise(x) * h;
+        gl_Position = vec4(a_pos.x, y, 1, 1);
+    }
+
+</script>
+
+
+
+<!--
+    Fragment shader
+-->
+
+<script id="frag" type="x-shader/x-fragment">
+
+    precision mediump float;
+
+    void main() {
+        gl_FragColor = vec4(0,0,0,1);
+    }
+
+</script>
+
+
+
+<!--
+    Scripts
+-->
+
+<script type="module">
+
+    import { Program } from 'https://esm.run/@dmtkpv/wgl@0.0.1'
+    import { Line2D } from 'https://esm.run/@dmtkpv/wgl@0.0.1/geometries'
+
+
+
+    // -------------------
+    // Globals
+    // -------------------
+
+    const start = Date.now();
+    const SIZE = 1024;
+    const canvas = document.createElement('canvas');
+    const vert = document.getElementById('vert').textContent;
+    const frag = document.getElementById('frag').textContent;
+    const gl = canvas.getContext('webgl');
+    const app = new Program(gl, vert, frag);
+
+
+
+    // -------------------
+    // Run
+    // -------------------
+
+    canvas.width = SIZE;
+    canvas.height = SIZE;
+    document.body.append(canvas);
+
+    gl.viewport(0, 0, SIZE, SIZE);
+    app.attr('pos', Line2D(-1, 0, 1, 0, SIZE), 2);
+
+
+
+    function render () {
+        app.uniform('time', (Date.now() - start) / 1000);
+        app.draw(gl.LINE_STRIP);
+        requestAnimationFrame(render);
+    }
+
+
+    render();
+
+
+
+</script>
